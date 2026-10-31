@@ -1,0 +1,31 @@
+﻿EAN, SKU ,Product Name,PRICE,Active
+8900000010011,DAI-001,Salted Butter 500g,275.00,true
+8900000010028,BIS-001,Glucose Biscuits 800g,₹85.00,TRUE
+8900000010035,STA-001,Iodised Salt 1kg,28,yes
+8900000010042,STA-002,Whole Wheat Atta 5kg,"₹1,299.00",Yes
+8900000010059,NOO-001,Instant Noodles 4 Pack,56.00,1
+8900000010066,BEV-001,Assam Tea 500g,"1,299.5",true
+   8900000010073  ,  PUL-001 ,   Toor Dal   1kg  ,  165.00 , true 
+8900000010080,OIL-001,Sunflower Oil 1L,₹ 189.00,
+8900000010097,DAI-002,Paneer 200g,95.00,true
+8900000010103,SNK-001,Salted Peanuts 200g,1299,true
+8900000010110,BEV-002,Instant Coffee 100g,"₹1,29,999.00",false
+8900000010127,HHC-001,Dishwash Bar 3 Pack,60.00,no
+40170725,CON-001,Chocolate Bar 40g,40.00,true
+012345678905,IMP-001,Imported Peanut Butter 340g,₹649.00,true
+8900000010134,SPI-001,Turmeric Powder 100g,32.00,true
+8900000010141,SPI-002,Red Chilli Powder 100g,45.00,true
+8900000010158,RIC-001,Basmati Rice 5kg,₹749.00,true
+8900000010165,DAI-003,Toned Milk 1L,68.00,true
+8900000010097,DAI-002,Paneer 200g,99.00,true
+8900000010173,BAD-001,Bad Check Digit Soap,35.00,true
+8900000010189,BAD-002,Missing Price Shampoo,,true
+8900000010196,BAD-003,,120.00,true
+8900000010202,BAD-004,Negative Price Ghee,-10.00,true
+89012AB345678,BAD-005,Letters In Barcode Jam,150.00,true
+12345,BAD-006,Short Barcode Honey,210.00,true
+8900000010219,BAD-007,Free Sample Sachet,free,true
+8900000010226,BAD-008,Three Decimals Sugar,45.999,true
+8900000010233,BAD-009,Unknown Active Jaggery,70.00,maybe
+,BAD-010,No Barcode Pickle,90.00,true
+8900000010240,SNK-002,Banana Chips 150g,₹75.50,true

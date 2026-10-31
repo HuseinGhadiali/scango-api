@@ -33,3 +33,20 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.barcode})"
+
+
+class ImportRun(models.Model):
+    """One run of the import_catalogue command, kept as an audit trail. Dry runs are not saved."""
+
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name="import_runs")
+    filename = models.CharField(max_length=255)
+    total_rows = models.PositiveIntegerField()
+    created_count = models.PositiveIntegerField()
+    updated_count = models.PositiveIntegerField()
+    unchanged_count = models.PositiveIntegerField()
+    failed_count = models.PositiveIntegerField()
+    started_at = models.DateTimeField()
+    finished_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.store.code} {self.filename} at {self.started_at:%Y-%m-%d %H:%M}"
