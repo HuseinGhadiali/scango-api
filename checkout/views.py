@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from rest_framework.views import APIView
 from catalogue.models import Store
 
 from . import payments, services
+from .reconciliation import reconciliation_report
 from .models import Basket, Order, PaymentEvent
 from .serializers import (
     AddItemSerializer,
@@ -143,3 +145,14 @@ class PaymentWebhookView(APIView):
         _, created = services.record_payment_event(event_id, event_type, payload)
         # A repeated event also gets 200: it tells the provider "received", so it stops retrying.
         return Response({"event_id": event_id, "duplicate": not created})
+
+
+class ReconciliationReportView(APIView):
+    # Only get() is defined, so DRF answers any other method with 405: the report is read-only.
+    def get(self, request):
+        raw_date = request.query_params.get("date", "")
+        try:
+            day = datetime.strptime(raw_date, "%Y-%m-%d").date()
+        except ValueError:
+            return bad_request("The date parameter is required, as YYYY-MM-DD.")
+        return Response(reconciliation_report(day))

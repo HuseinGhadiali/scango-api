@@ -22,4 +22,9 @@ urlpatterns = [
     ),
     path("orders/<uuid:order_id>/", views.OrderDetailView.as_view(), name="order-detail"),
     path("payments/webhook/", views.PaymentWebhookView.as_view(), name="payment-webhook"),
+    path(
+        "reports/reconciliation/",
+        views.ReconciliationReportView.as_view(),
+        name="reconciliation-report",
+    ),
 ]
