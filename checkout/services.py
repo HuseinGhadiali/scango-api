@@ -5,13 +5,17 @@ transaction. While one request holds the lock, any other request for the same ba
 an item can't be added halfway through a checkout and two checkouts can't run at once.
 """
 
+import uuid
+
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from catalogue.models import Product
 
-from .models import Basket, BasketItem, Order
+from . import payments
+from .models import Basket, BasketItem, Order, PaymentEvent
 
 
 class CheckoutError(Exception):
@@ -96,4 +100,63 @@ def checkout_basket(basket_id, idempotency_key, payment_token):
         # The basket is closed as soon as it becomes an order, so its items can't change.
         basket.status = Basket.Status.CHECKED_OUT
         basket.save(update_fields=["status"])
+
+        # Charged while the basket lock is held, so a second request can't start a second
+        # charge. The cost is that a slow gateway keeps the lock longer (see the README).
+        charge_order(order, payment_token)
         return order, True
+
+
+def charge_order(order, payment_token):
+    gateway = payments.get_payment_gateway()
+    result = gateway.charge(
+        order.total, order.store.currency, payment_token, order.idempotency_key
+    )
+    order.payment_reference = result.reference
+    if result.succeeded:
+        order.status = Order.Status.PAID
+        order.paid_at = timezone.now()
+    else:
+        order.status = Order.Status.FAILED
+    order.save(update_fields=["payment_reference", "status", "paid_at"])
+
+
+def find_order_for_update(order_id):
+    """Return the locked order with this id, or None if the id is missing, malformed or unknown."""
+    try:
+        order_uuid = uuid.UUID(str(order_id))
+    except ValueError:
+        return None
+    return Order.objects.select_for_update().filter(pk=order_uuid).first()
+
+
+def record_payment_event(event_id, event_type, payload):
+    """Store a webhook event and act on it once. Returns (event, created).
+
+    created is False when this event_id was already received; the event is then not
+    processed again, because providers resend webhooks they think were not delivered.
+    """
+    with transaction.atomic():
+        order = find_order_for_update(payload.get("order_id"))
+        # get_or_create relies on the unique event_id, so even two copies of the same event
+        # arriving at the same moment produce one row.
+        event, created = PaymentEvent.objects.get_or_create(
+            event_id=event_id,
+            defaults={"type": event_type, "order": order, "payload": payload},
+        )
+        if created and order is not None:
+            apply_payment_event(event, order)
+        return event, created
+
+
+def apply_payment_event(event, order):
+    if event.type == PaymentEvent.Type.PAYMENT_SUCCEEDED:
+        # The fake gateway answers at checkout, so the order is usually already paid and this
+        # event only confirms it. A pending order is marked paid here; a failed order is left
+        # alone and shows up in the reconciliation report instead.
+        if order.status == Order.Status.PENDING:
+            order.status = Order.Status.PAID
+            order.paid_at = timezone.now()
+            order.save(update_fields=["status", "paid_at"])
+    # payment.refunded: recorded and linked to its order only. There is no "refunded" order
+    # status in this version (see the README's open questions).

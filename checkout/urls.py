@@ -21,4 +21,5 @@ urlpatterns = [
         name="basket-checkout",
     ),
     path("orders/<uuid:order_id>/", views.OrderDetailView.as_view(), name="order-detail"),
+    path("payments/webhook/", views.PaymentWebhookView.as_view(), name="payment-webhook"),
 ]

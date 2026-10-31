@@ -74,3 +74,30 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} ({self.status})"
+
+
+class PaymentEvent(models.Model):
+    """A webhook call from the payment provider, stored exactly as received."""
+
+    class Type(models.TextChoices):
+        PAYMENT_SUCCEEDED = "payment.succeeded"
+        PAYMENT_REFUNDED = "payment.refunded"
+
+    # The provider's id for the event. Unique, because providers retry webhooks and the same
+    # event must only be processed once.
+    event_id = models.CharField(max_length=255, unique=True)
+    type = models.CharField(max_length=50, choices=Type.choices)
+    # Null when the event names an order we don't have. The event is still kept, so the
+    # reconciliation report can show it instead of it disappearing.
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payment_events",
+    )
+    payload = models.JSONField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.type} {self.event_id}"
