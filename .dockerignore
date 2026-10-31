@@ -1,0 +1,10 @@
+# Keep local-only files out of the image: the Windows virtualenv, the SQLite database,
+# secrets and generated reports.
+.git
+.venv
+.claude
+__pycache__
+*.pyc
+db.sqlite3
+reports
+.env

@@ -1,0 +1,43 @@
+# docker compose up  ->  starts PostgreSQL, runs migrations, then serves the API on :8000.
+# Values like ${DB_PASSWORD} are read from a .env file next to this one (see .env.example);
+# the part after ":-" is the local default used when .env doesn't set them.
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: scango
+      POSTGRES_USER: scango
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-scango-local-only}
+    volumes:
+      # A named volume, so the data survives `docker compose down` and container rebuilds.
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Lets `web` wait until PostgreSQL actually accepts connections, not just until the
+      # container has started.
+      test: ["CMD-SHELL", "pg_isready -U scango -d scango"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: scango
+      DB_USER: scango
+      DB_PASSWORD: ${DB_PASSWORD:-scango-local-only}
+      DB_HOST: db  # the service name above; Compose gives each service a hostname
+      DB_PORT: "5432"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-local-development-only}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-local-dev-webhook-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
