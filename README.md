@@ -14,6 +14,13 @@ against the payment provider at the end of the day. This project implements that
 - **Webhooks:** signed payment callbacks, stored once even when the provider retries.
 - **Reconciliation:** a daily report of paid orders versus payment events, per store.
 
+## How this was built
+
+I wrote the specification, [`docs/SPEC.md`](docs/SPEC.md): the domain rules, the API, the
+constraints and a phase-by-phase plan. [Claude Code](https://claude.com/claude-code) wrote the
+code from that spec, one commit per phase. I then set it up, ran the test suite, and worked
+through every file until I could explain each design decision.
+
 ## Request flow
 
 ```mermaid
@@ -57,6 +64,7 @@ sequenceDiagram
 
 | Path | What it holds |
 | --- | --- |
+| `docs/SPEC.md` | The specification the project was built from |
 | `config/` | Django settings (read from environment variables) and the root URL list |
 | `catalogue/models.py` | `Store`, `Product`, `ImportRun` |
 | `catalogue/importer.py` | CSV cleaning, validation and upsert logic |
