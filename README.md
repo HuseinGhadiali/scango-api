@@ -145,10 +145,14 @@ docker compose exec web python manage.py seed_demo
 docker compose exec web pytest
 ```
 
-> **Untested:** Docker was not available on the machine these files were written on, so
-> `Dockerfile` and `docker-compose.yml` have not been run. The PostgreSQL settings were only
-> checked as far as Django loading the PostgreSQL driver; the test suite has only been run on
-> SQLite.
+> **Tested on PostgreSQL and Docker (1 Nov 2026).** `docker compose up --build` starts both
+> services, PostgreSQL passes its health check, migrations run and the API serves on port 8000;
+> `seed_demo` and `pytest` inside the `web` container pass (84 tests). The suite also passes
+> against a local PostgreSQL 16 outside Docker, and an end-to-end run (scan, basket, checkout,
+> retry with the same key, signed and duplicate webhooks, reconciliation) behaved as documented.
+> Eight identical checkout requests sent at the same moment, repeated five times, produced exactly
+> one order and one charge each time, so the `select_for_update()` row lock holds on a real
+> database.
 
 ## Running the tests
 
